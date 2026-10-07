@@ -1,0 +1,16 @@
+{
+  "name": "dpts-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack React (Vite) + Node.js (MongoDB Cloud) application",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "build:client": "npm run build --prefix client",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
