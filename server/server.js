@@ -4,6 +4,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import itemRoutes from './routes/itemRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 // Load environment variables
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 
 // Error Handling Middleware

@@ -1,24 +1,32 @@
 import React from 'react';
+import OfficeLogo from './OfficeLogo';
+import { User, LogOut, UserPlus, LogIn, LayoutDashboard } from 'lucide-react';
 
-export default function Navbar({ dbStatus }) {
+export default function Navbar({
+  dbStatus,
+  currentUser,
+  currentView,
+  onNavigate,
+  onLogout,
+}) {
   const getStatusBadge = () => {
     switch (dbStatus) {
       case 'connected':
         return (
-          <span className="badge badge-success">
-            <span className="dot dot-success"></span> MongoDB Cloud Connected
+          <span className="badge badge-success" title="Database is connected">
+            <span className="dot dot-success"></span> Cloud Connected
           </span>
         );
       case 'disconnected':
         return (
-          <span className="badge badge-error">
-            <span className="dot dot-error"></span> MongoDB Disconnected
+          <span className="badge badge-error" title="Database is offline">
+            <span className="dot dot-error"></span> DB Offline
           </span>
         );
       default:
         return (
           <span className="badge badge-warning">
-            <span className="dot dot-warning"></span> Checking Status...
+            <span className="dot dot-warning"></span> Checking...
           </span>
         );
     }
@@ -27,16 +35,87 @@ export default function Navbar({ dbStatus }) {
   return (
     <header className="navbar">
       <div className="navbar-container">
-        <div className="logo-container">
-          <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          </svg>
-          <span className="brand-title">DPTS MERN App</span>
+        <div
+          className="logo-container clickable"
+          onClick={() => onNavigate('welcome')}
+          title="Return to Welcome Screen"
+        >
+          <OfficeLogo size={48} rounded={false} />
+          <div className="brand-text-group">
+            <span className="brand-title">Zonal Education Office Katugastota</span>
+            <span className="brand-subtitle">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</span>
+          </div>
         </div>
-        <div className="status-container">
-          {getStatusBadge()}
+
+        <div className="nav-right-section">
+          {/* Status Badge */}
+          <div className="status-container">{getStatusBadge()}</div>
+
+          {/* Navigation Links / User info */}
+          <div className="nav-actions">
+            {currentUser ? (
+              <div className="user-profile-bar">
+                <div className="user-avatar-badge">
+                  <User size={16} />
+                  <span className="user-name">{currentUser.name}</span>
+                  <span className="user-role-chip">{currentUser.role}</span>
+                </div>
+                {currentView !== 'home' && (
+                  <button
+                    type="button"
+                    className="nav-btn nav-btn-outline"
+                    onClick={() => onNavigate('home')}
+                  >
+                    <LayoutDashboard size={15} />
+                    <span>Dashboard</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="nav-btn nav-btn-logout"
+                  onClick={onLogout}
+                  title="Log out"
+                >
+                  <LogOut size={15} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <div className="nav-auth-buttons">
+                {currentView !== 'welcome' && (
+                  <button
+                    type="button"
+                    className="nav-btn nav-btn-ghost"
+                    onClick={() => onNavigate('welcome')}
+                  >
+                    Welcome
+                  </button>
+                )}
+                {currentView !== 'login' && (
+                  <button
+                    type="button"
+                    className={`nav-btn ${
+                      currentView === 'login' ? 'active' : 'nav-btn-outline'
+                    }`}
+                    onClick={() => onNavigate('login')}
+                  >
+                    <LogIn size={15} />
+                    <span>Login</span>
+                  </button>
+                )}
+                {currentView !== 'register' && (
+                  <button
+                    type="button"
+                    className="nav-btn nav-btn-primary"
+                    onClick={() => onNavigate('register')}
+                  >
+                    <UserPlus size={15} />
+                    <span>Create Account</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

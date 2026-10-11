@@ -7,6 +7,32 @@ const api = axios.create({
   },
 });
 
+// Attach Authorization header if token exists
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('zeo_auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Authentication endpoints
+export const registerUser = async (userData) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const loginUser = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
+};
+
+// Item endpoints
 export const getItems = async () => {
   const response = await api.get('/items');
   return response.data;
