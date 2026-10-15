@@ -11,12 +11,13 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'Please provide your official email address'],
+      required: false,
       unique: true,
+      sparse: true,
       trim: true,
       lowercase: true,
       match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         'Please provide a valid email address',
       ],
     },
@@ -28,16 +29,17 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: [
-        'Zonal Director',
+        'Director',
         'Deputy Director',
+        'Staff Member',
+        'Zonal Director',
         'Planning Officer',
         'Development Officer',
         'IT Officer',
         'Sectional Head',
-        'Staff Member',
         'Admin',
       ],
-      default: 'Development Officer',
+      default: 'Director',
     },
     employeeId: {
       type: String,
@@ -50,8 +52,8 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
+      required: [true, 'Please provide your contact number'],
       trim: true,
-      default: '',
     },
     status: {
       type: String,
@@ -63,6 +65,14 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Pre-validate hook to ensure empty string email is treated as undefined (avoids duplicate key on sparse index)
+userSchema.pre('validate', function (next) {
+  if (this.email === '' || (typeof this.email === 'string' && !this.email.trim())) {
+    this.email = undefined;
+  }
+  next();
+});
 
 // Hash password before saving if modified
 userSchema.pre('save', async function (next) {
