@@ -1065,6 +1065,13 @@
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
 }
 
+.form-input:disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
 .select-input {
   cursor: pointer;
   appearance: none;
@@ -1089,6 +1096,11 @@
 }
 .password-toggle-btn:hover {
   color: var(--text-main);
+}
+.password-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 /* Checkbox */
@@ -1371,12 +1383,29 @@
 }
 
 .popup-welcome-heading {
-  font-size: 1.45rem;
-  font-weight: 900;
+  font-size: 1.4rem;
+  font-weight: 800;
   color: #0f291e;
   line-height: 1.35;
-  margin: 0.5rem 0 0.5rem 0;
+  margin: 0.5rem 0 0.6rem 0;
   letter-spacing: -0.01em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.popup-welcome-title {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f291e;
+}
+
+.popup-welcome-office {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary);
 }
 
 .popup-sinhala-text {
@@ -1459,7 +1488,13 @@
     padding: 2rem 1.5rem;
   }
   .popup-welcome-heading {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+  }
+  .popup-welcome-title {
+    font-size: 1.15rem;
+  }
+  .popup-welcome-office {
+    font-size: 1.05rem;
   }
   .popup-footer-action {
     flex-direction: column;
@@ -1469,4 +1504,138 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ========================================================
+   REGISTRATION SUCCESS POPUP MODAL (For users without email)
+   ======================================================== */
+.register-success-popup {
+  max-width: 520px;
+  padding: 2.25rem 2rem;
+  border: 2px solid #86efac;
+  text-align: center;
+}
+
+.register-success-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: #dcfce7;
+  border: 2px solid #86efac;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.15);
+}
+
+.register-success-check {
+  color: #16a34a;
+}
+
+.register-success-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #0f291e;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.01em;
+}
+
+.register-success-sinhala {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.85rem;
+}
+
+.register-success-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+}
+
+.register-success-details {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1.2rem;
+  text-align: left;
+}
+
+.success-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0;
+  font-size: 0.88rem;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.success-detail-row:last-child {
+  border-bottom: none;
+}
+
+.success-detail-label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.success-detail-value {
+  color: #0f291e;
+  font-weight: 700;
+}
+
+.success-detail-badge {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.register-success-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.84rem;
+  color: #166534;
+  line-height: 1.5;
+  text-align: left;
+  margin-bottom: 1.4rem;
+}
+
+.register-success-tip .tip-icon {
+  font-size: 1.1rem;
+}
+
+.register-popup-proceed-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #ffffff;
+  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+  transition: all 0.2s ease;
+}
+
+.register-popup-proceed-btn:hover {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
 }

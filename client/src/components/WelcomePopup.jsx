@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import OfficeLogo from './OfficeLogo';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function WelcomePopup({ isOpen, onClose }) {
   const [secondsLeft, setSecondsLeft] = useState(6);
@@ -24,11 +24,6 @@ export default function WelcomePopup({ isOpen, onClose }) {
   return (
     <div className="popup-backdrop">
       <div className="popup-card animate-zoom-in">
-        {/* Top Government Badge */}
-        <div className="popup-gov-badge">
-          <Sparkles size={14} className="popup-sparkle" />
-          <span>Government of Sri Lanka &bull; Central Province</span>
-        </div>
 
         {/* Official Logo */}
         <div className="popup-logo-wrapper">
@@ -37,7 +32,8 @@ export default function WelcomePopup({ isOpen, onClose }) {
 
         {/* Exact Welcome Text Requested by User */}
         <h2 className="popup-welcome-heading">
-          Welcome to Development Progress Tracking System Zonal education office katugastota
+          <span className="popup-welcome-title">Welcome to Development Progress Tracking System</span>
+          <span className="popup-welcome-office">Zonal Education Office - Katugastota</span>
         </h2>
 
         {/* Sinhala Sub-heading */}

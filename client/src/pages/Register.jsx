@@ -6,11 +6,11 @@ import {
   Eye,
   EyeOff,
   Briefcase,
-  IdCard,
   Phone,
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   UserPlus,
   Building2,
   Shield,
@@ -23,8 +23,7 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'Development Officer',
-    employeeId: '',
+    role: 'Director',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -36,23 +35,27 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [registeredUser, setRegisteredUser] = useState(null);
 
   const roles = [
-    { value: 'Zonal Director', label: 'Zonal Director (කලාප අධ්‍යක්ෂ)' },
+    { value: 'Director', label: 'Director (අධ්‍යක්ෂ)' },
     { value: 'Deputy Director', label: 'Deputy Director (නියෝජ්‍ය අධ්‍යක්ෂ)' },
-    { value: 'Planning Officer', label: 'Planning Officer (සැලසුම් නිලධාරී)' },
-    { value: 'Development Officer', label: 'Development Officer (සංවර්ධන නිලධාරී)' },
-    { value: 'IT Officer', label: 'IT Officer (තොරතුරු තාක්ෂණ නිලධාරී)' },
-    { value: 'Sectional Head', label: 'Sectional Head (අංශ ප්‍රධානී)' },
     { value: 'Staff Member', label: 'Staff Member (කාර්ය මණ්ඩලය)' },
   ];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setFormData((prev) => {
+      const nextData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+      if (name === 'password' && !value) {
+        nextData.confirmPassword = '';
+      }
+      return nextData;
+    });
     if (errorMessage) setErrorMessage('');
   };
 
@@ -60,12 +63,20 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
     if (!formData.name.trim()) {
       return 'Please enter your full name (සම්පූර්ණ නම ඇතුළත් කරන්න).';
     }
-    if (!formData.email.trim()) {
-      return 'Please enter your official email address (විද්‍යුත් ලිපිනය ඇතුළත් කරන්න).';
+    // Email is optional: validate format only if provided
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        return 'Please enter a valid email address (වලංගු විද්‍යුත් ලිපිනයක් ඇතුළත් කරන්න).';
+      }
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      return 'Please enter a valid email address (වලංගු විද්‍යුත් ලිපිනයක් ඇතුළත් කරන්න).';
+    // Contact number is required
+    if (!formData.phone.trim()) {
+      return 'Please enter your contact number (දුරකථන අංකය ඇතුළත් කරන්න).';
+    }
+    const cleanPhone = formData.phone.replace(/[\s\-]/g, '');
+    if (cleanPhone.length < 9) {
+      return 'Please enter a valid contact number (අවම වශයෙන් ඉලක්කම් 9-10ක් සහිත වලංගු දුරකථන අංකයක් ඇතුළත් කරන්න).';
     }
     if (!formData.password) {
       return 'Please enter a password (මුරපදයක් ඇතුළත් කරන්න).';
@@ -84,6 +95,12 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.isAuthorizedOfficer) {
+      setErrorMessage(
+        'Please confirm that you are an authorized officer of the Zonal Education Office - Katugastota before submitting.'
+      );
+      return;
+    }
     const error = validate();
     if (error) {
       setErrorMessage(error);
@@ -97,12 +114,13 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
     try {
       const payload = {
         name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
+        email: formData.email.trim() ? formData.email.trim().toLowerCase() : '',
         password: formData.password,
         role: formData.role,
-        employeeId: formData.employeeId.trim(),
         phone: formData.phone.trim(),
       };
+
+      const hasEmail = Boolean(formData.email && formData.email.trim());
 
       const res = await registerUser(payload);
 
@@ -111,14 +129,9 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
         localStorage.setItem('zeo_auth_user', JSON.stringify(res.data));
       }
 
-      setSuccessMessage('Account created successfully! Redirection in progress...');
-      setTimeout(() => {
-        if (onRegisterSuccess) {
-          onRegisterSuccess(res.data);
-        } else {
-          onNavigateToLogin();
-        }
-      }, 1500);
+      setRegisteredUser(res.data || payload);
+      setShowSuccessPopup(true);
+      setSuccessMessage('Account registered successfully! Welcome to DPTS.');
     } catch (err) {
       const serverErr =
         err.response?.data?.message ||
@@ -126,6 +139,15 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
       setErrorMessage(serverErr);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePopupProceed = () => {
+    setShowSuccessPopup(false);
+    if (onRegisterSuccess) {
+      onRegisterSuccess(registeredUser);
+    } else {
+      onNavigateToLogin();
     }
   };
 
@@ -155,7 +177,6 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
         <div className="auth-header">
           <OfficeLogo size={75} />
           <div className="auth-title-block">
-            <span className="gov-mini-tag">Government of Sri Lanka</span>
             <h1 className="auth-title">Officer Registration</h1>
             <h2 className="auth-sinhala-subtitle">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</h2>
             <p className="auth-system-desc">
@@ -194,7 +215,6 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g. K.M. Bandara"
                 className="form-input"
                 required
                 autoComplete="name"
@@ -202,11 +222,11 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
             </div>
           </div>
 
-          {/* Email Address */}
+          {/* Email Address (Optional) */}
           <div className="form-group">
             <label className="form-label">
-              <span>Official Email (නිල විද්‍යුත් තැපෑල)</span>
-              <span className="required-star">*</span>
+              <span>Email (විද්‍යුත් තැපෑල)</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500, marginLeft: '0.35rem' }}>(Optional / විකල්පයි)</span>
             </label>
             <div className="input-wrapper">
               <Mail size={18} className="input-icon" />
@@ -215,63 +235,41 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="officer@katugastota.edu.lk"
                 className="form-input"
-                required
                 autoComplete="email"
               />
             </div>
-            <span className="field-hint">Use your official or departmental email address</span>
+            <span className="field-hint">Optional: Enter if you wish to receive system email updates</span>
           </div>
 
-          {/* Grid row: Role & Staff ID */}
-          <div className="form-grid-row">
-            {/* Designation / Role */}
-            <div className="form-group">
-              <label className="form-label">
-                <span>Designation / Role (තනතුර)</span>
-                <span className="required-star">*</span>
-              </label>
-              <div className="input-wrapper">
-                <Briefcase size={18} className="input-icon" />
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="form-input select-input"
-                >
-                  {roles.map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Staff / Employee ID */}
-            <div className="form-group">
-              <label className="form-label">
-                <span>Employee / Staff ID (සේවක අංකය)</span>
-              </label>
-              <div className="input-wrapper">
-                <IdCard size={18} className="input-icon" />
-                <input
-                  type="text"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                  placeholder="e.g. ZE-KG-1042"
-                  className="form-input"
-                />
-              </div>
+          {/* Designation / Role */}
+          <div className="form-group">
+            <label className="form-label">
+              <span>Designation / Role (තනතුර)</span>
+              <span className="required-star">*</span>
+            </label>
+            <div className="input-wrapper">
+              <Briefcase size={18} className="input-icon" />
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="form-input select-input"
+              >
+                {roles.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Contact Number */}
+          {/* Contact Number (Required) */}
           <div className="form-group">
             <label className="form-label">
               <span>Contact Number (දුරකථන අංකය)</span>
+              <span className="required-star">*</span>
             </label>
             <div className="input-wrapper">
               <Phone size={18} className="input-icon" />
@@ -280,10 +278,11 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="e.g. 081-2498222 / 077-1234567"
                 className="form-input"
+                required
               />
             </div>
+            <span className="field-hint">Required for official communication and account identification</span>
           </div>
 
           {/* Grid row: Password & Confirm Password */}
@@ -301,7 +300,6 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="At least 6 characters"
                   className="form-input"
                   required
                   autoComplete="new-password"
@@ -330,20 +328,26 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Re-enter password"
                   className="form-input"
                   required
                   autoComplete="new-password"
+                  disabled={!formData.password}
                 />
                 <button
                   type="button"
                   className="password-toggle-btn"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   aria-label="Toggle password visibility"
+                  disabled={!formData.password}
                 >
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {!formData.password && (
+                <span className="field-hint" style={{ color: '#94a3b8' }}>
+                  Please enter a password first to enable confirmation
+                </span>
+              )}
             </div>
           </div>
 
@@ -356,19 +360,26 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
                 checked={formData.isAuthorizedOfficer}
                 onChange={handleChange}
                 className="form-checkbox"
+                required
               />
               <span className="checkbox-text">
-                I hereby declare that I am an authorized officer/staff member of the
-                <strong> Zonal Education Office - Katugastota</strong>.
+                I hereby declare that I am an authorized officer/staff member of the{' '}
+                <strong>Zonal Education Office - Katugastota</strong>.
               </span>
             </label>
+            {!formData.isAuthorizedOfficer && (
+              <span className="field-hint" style={{ color: '#d97706', display: 'block', marginTop: '0.25rem' }}>
+                * Please tick this declaration to proceed with registration
+              </span>
+            )}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !formData.isAuthorizedOfficer}
             className="submit-btn register-submit-btn"
+            title={!formData.isAuthorizedOfficer ? 'Please accept the declaration to submit' : ''}
           >
             {loading ? (
               <>
@@ -403,6 +414,71 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
           </div>
         </div>
       </div>
+
+      {/* Registration Success Popup */}
+      {showSuccessPopup && registeredUser && (
+        <div className="popup-backdrop">
+          <div className="popup-card register-success-popup animate-zoom-in">
+            <div className="register-success-icon-wrapper" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
+              <CheckCircle2 size={50} className="register-success-check" style={{ color: '#15803d' }} />
+            </div>
+
+            <h2 className="register-success-title">
+              Registration Successful!
+            </h2>
+            <p className="register-success-sinhala">
+              කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය &bull; DPTS පද්ධතිය
+            </p>
+
+            <p className="register-success-desc">
+              Welcome, <strong>{registeredUser.name}</strong>! ඔබගේ නිලධාරී ගිණුම සාර්ථකව පද්ධතියට ලියාපදිංචි කරන ලදී.
+            </p>
+
+            {/* Officer Details Summary Box */}
+            <div className="register-success-details">
+              <div className="success-detail-row">
+                <span className="success-detail-label">Designation (තනතුර):</span>
+                <span className="success-detail-value">{registeredUser.role}</span>
+              </div>
+              <div className="success-detail-row">
+                <span className="success-detail-label">Contact Number (දුරකථනය):</span>
+                <span className="success-detail-value">{registeredUser.phone}</span>
+              </div>
+              <div className="success-detail-row">
+                <span className="success-detail-label">Account Status (තත්ත්වය):</span>
+                <span
+                  className="success-detail-badge"
+                  style={{
+                    backgroundColor: '#dcfce7',
+                    color: '#15803d',
+                    border: '1px solid #86efac',
+                  }}
+                >
+                  ✅ Active (ක්‍රියාකාරී)
+                </span>
+              </div>
+            </div>
+
+            {/* Notice about system access */}
+            <div className="register-success-tip" style={{ borderColor: '#86efac', backgroundColor: '#f0fdf4' }}>
+              <span className="tip-icon">✨</span>
+              <div style={{ color: '#166534' }}>
+                ඔබගේ ගිණුම සාර්ථකව සක්‍රිය කර ඇත. දැන් ඔබට Development Progress Tracking System වෙත පිවිසිය හැක.
+              </div>
+            </div>
+
+            {/* Action button */}
+            <button
+              type="button"
+              className="register-popup-proceed-btn"
+              onClick={handlePopupProceed}
+            >
+              <span>Proceed to Dashboard (Dashboard වෙත යන්න)</span>
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

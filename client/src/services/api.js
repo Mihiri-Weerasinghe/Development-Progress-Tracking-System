@@ -48,8 +48,71 @@ export const deleteItem = async (id) => {
   return response.data;
 };
 
+// Funding Resource endpoints
+export const getFundingSources = async () => {
+  const response = await api.get('/funding');
+  return response.data;
+};
+
+export const getFundingSourceById = async (id) => {
+  const response = await api.get(`/funding/${id}`);
+  return response.data;
+};
+
+export const createFundingSource = async (data) => {
+  const response = await api.post('/funding', data);
+  return response.data;
+};
+
+export const updateFundingSource = async (id, data) => {
+  const response = await api.put(`/funding/${id}`, data);
+  return response.data;
+};
+
+export const deleteFundingSource = async (id) => {
+  const response = await api.delete(`/funding/${id}`);
+  return response.data;
+};
+
+// Fund Activity Record Endpoints (Government Detailed Progress Sheet)
+export const getFundRecords = async (fundCode) => {
+  const response = await api.get(`/funding/${fundCode}/records`);
+  return response.data;
+};
+
+export const createFundRecord = async (fundCode, recordData) => {
+  const response = await api.post(`/funding/${fundCode}/records`, recordData);
+  return response.data;
+};
+
+export const updateFundRecord = async (recordId, recordData) => {
+  const response = await api.put(`/funding/records/${recordId}`, recordData);
+  return response.data;
+};
+
+export const deleteFundRecord = async (recordId) => {
+  const response = await api.delete(`/funding/records/${recordId}`);
+  return response.data;
+};
+
 export const checkServerHealth = async () => {
   const response = await api.get('/health');
+  return response.data;
+};
+
+// Admin User Management endpoints
+export const getUsers = async () => {
+  const response = await api.get('/users');
+  return response.data;
+};
+
+export const updateUserStatus = async (id, status, role) => {
+  const response = await api.put(`/users/${id}/status`, { status, role });
+  return response.data;
+};
+
+export const deleteUser = async (id) => {
+  const response = await api.delete(`/users/${id}`);
   return response.data;
 };
 

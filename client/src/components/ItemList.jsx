@@ -53,7 +53,6 @@ export default function ItemList({ items, setItems, loading, error, onRefresh })
             <input
               id="title"
               type="text"
-              placeholder="e.g. Initial Project Setup"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -65,7 +64,6 @@ export default function ItemList({ items, setItems, loading, error, onRefresh })
             <textarea
               id="desc"
               rows="3"
-              placeholder="Optional notes or details..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

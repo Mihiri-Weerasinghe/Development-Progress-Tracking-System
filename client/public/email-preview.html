@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DPTS - Registration Confirmation Email Preview</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f1f5f3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .email-container {
+      max-width: 620px;
+      margin: 30px auto;
+      background: #ffffff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(21, 128, 61, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e2e8f0;
+    }
+    .header-bar {
+      background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+      padding: 32px 28px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .header-sub-tag {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      color: #dcfce7;
+    }
+    .header-title {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+    .header-office {
+      margin: 0 0 6px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #bbf7d0;
+      letter-spacing: 0.02em;
+    }
+    .header-sinhala {
+      margin: 0;
+      font-size: 13px;
+      color: #e2e8f0;
+      opacity: 0.92;
+      font-weight: 500;
+    }
+    .body-content {
+      padding: 36px 32px 28px 32px;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f291e;
+      margin: 0 0 12px 0;
+    }
+    .intro-text {
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: #334155;
+      margin: 0 0 20px 0;
+    }
+    .intro-sinhala {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #15803d;
+      font-weight: 600;
+      margin: 0 0 24px 0;
+      padding: 12px 16px;
+      background: #f0fdf4;
+      border-left: 3px solid #16a34a;
+      border-radius: 0 8px 8px 0;
+    }
+    .details-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 26px;
+    }
+    .details-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin: 0 0 14px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      font-size: 14px;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    .detail-value {
+      color: #0f291e;
+      font-weight: 700;
+      text-align: right;
+    }
+    .badge-status {
+      display: inline-block;
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .cta-container {
+      text-align: center;
+      margin: 28px 0 24px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 13px 32px;
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+      letter-spacing: 0.01em;
+    }
+    .security-notice {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #92400e;
+      margin-top: 22px;
+    }
+    .security-notice strong {
+      color: #78350f;
+    }
+    .footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 24px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .footer-title {
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <!-- Header -->
+    <div class="header-bar">
+      <span class="header-sub-tag">Official Notification</span>
+      <h1 class="header-title">Development Progress Tracking System</h1>
+      <div class="header-office">Zonal Education Office - Katugastota</div>
+      <div class="header-sinhala">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</div>
+    </div>
+
+    <!-- Body -->
+    <div class="body-content">
+      <h2 class="greeting">Dear Officer,</h2>
+      
+      <p class="intro-text">
+        Welcome to the <strong>Development Progress Tracking System (DPTS)</strong>. Your official officer account has been created successfully.
+      </p>
+
+      <div class="intro-sinhala">
+        කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලයීය සංවර්ධන ප්‍රගති අධීක්ෂණ පද්ධතියෙහි (DPTS) ඔබගේ නිල ගිණුම සාර්ථකව ලියාපදිංචි කර ඇත.
+      </div>
+
+      <!-- Account Summary -->
+      <div class="details-box">
+        <div class="details-title">Registered Account Details / ගිණුමේ විස්තර</div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Full Name (නම)</span>
+          <span class="detail-value">K.M. Bandara</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Designation (තනතුර)</span>
+          <span class="detail-value">Director / Deputy Director / Staff Member</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Contact Number (දුරකථන අංකය)</span>
+          <span class="detail-value">077-1234567</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Registered Email (විද්‍යුත් තැපෑල)</span>
+          <span class="detail-value">officer@katugastota.edu.lk</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Account Status (තත්ත්වය)</span>
+          <span class="detail-value"><span class="badge-status">Active (ක්‍රියාකාරී)</span></span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Office (කාර්යාලය)</span>
+          <span class="detail-value">Zonal Education Office - Katugastota</span>
+        </div>
+      </div>
+
+      <!-- Call to Action -->
+      <div class="cta-container">
+        <a href="http://localhost:5173" class="cta-button" target="_blank">
+          Login to DPTS Portal &rarr;
+        </a>
+      </div>
+
+      <!-- Security Advisory -->
+      <div class="security-notice">
+        <strong>Security Notice (ආරක්ෂිත දැනුම්දීම):</strong> Please keep your login credentials and password safe. Do not share your login details with unauthorized individuals. If you did not create this account, please immediately inform the Zonal Education Office administration.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-title">Development Progress Tracking System &bull; Zonal Education Office - Katugastota</div>
+      <div>Official Administrative Portal &bull; All Rights Reserved</div>
+      <div style="margin-top: 8px; color: #94a3b8; font-size: 11px;">This is an automated system email notification. Please do not reply directly to this email.</div>
+    </div>
+  </div>
+</body>
+</html>

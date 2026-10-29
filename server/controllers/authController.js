@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { sendRegistrationConfirmationEmail } from '../services/emailService.js';
 
 // Helper to generate JWT token
 const generateToken = (id, role) => {
@@ -24,10 +25,10 @@ export const register = async (req, res, next) => {
 
     const { name, email, password, role, employeeId, phone } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !phone || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide full name, email, and password.',
+        message: 'Please provide full name, contact number, and password.',
       });
     }
 
@@ -38,40 +39,93 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
+    const trimmedPhone = phone.trim();
+    const cleanEmail =
+      email && typeof email === 'string' && email.trim()
+        ? email.trim().toLowerCase()
+        : undefined;
+
+    // Check if user already exists with contact number
+    const existingPhone = await User.findOne({ phone: trimmedPhone });
+    if (existingPhone) {
       return res.status(400).json({
         success: false,
-        message: 'An account with this email address already exists.',
+        message: 'An account with this contact number already exists.',
       });
     }
 
-    // Create user
+    // Check if user already exists with email (if provided)
+    if (cleanEmail) {
+      const existingEmail = await User.findOne({ email: cleanEmail });
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'An account with this email address already exists.',
+        });
+      }
+    }
+
+    // Create user (status defaults to 'active')
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+      email: cleanEmail,
       password,
-      role: role || 'Development Officer',
-      employeeId: employeeId || '',
-      phone: phone || '',
+      role: role || 'Director',
+      employeeId: employeeId ? employeeId.trim() : '',
+      phone: trimmedPhone,
       office: 'Zonal Education Office - Katugastota',
+      status: 'active',
     });
+
+    // Send registration confirmation email (await to guarantee dispatch)
+    let emailStatus = { sent: false };
+    if (user.email) {
+      try {
+        const result = await sendRegistrationConfirmationEmail({
+          to: user.email,
+          name: user.name,
+          role: user.role,
+          phone: user.phone,
+          email: user.email,
+        });
+
+        if (result && result.success) {
+          emailStatus = {
+            sent: true,
+            isTest: Boolean(result.isTest),
+            previewUrl: result.previewUrl || null,
+          };
+          console.log(`[Auth Controller] ✉️ Registration confirmation email sent to: ${user.email}`);
+        } else {
+          emailStatus = { sent: false, error: result?.error || result?.reason };
+          console.warn(
+            `[Auth Controller] ⚠️ Registration email could not be sent to ${user.email}:`,
+            result?.error || result?.reason
+          );
+        }
+      } catch (err) {
+        emailStatus = { sent: false, error: err.message };
+        console.error('[Auth Controller] Background email send error:', err.message);
+      }
+    }
 
     const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully for Zonal Education Office - Katugastota',
+      message: 'Account registered successfully! Welcome to Zonal Education Office - Katugastota DPTS.',
       data: {
         _id: user._id,
         name: user.name,
-        email: user.email,
+        email: user.email || '',
+        phone: user.phone,
         role: user.role,
         employeeId: user.employeeId,
         office: user.office,
+        status: user.status,
       },
       token,
+      emailStatus,
     });
   } catch (error) {
     next(error);
@@ -94,15 +148,24 @@ export const login = async (req, res, next) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide both email and password.',
+        message: 'Please provide both email/contact number and password.',
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const identifier = email.trim();
+    const isShortAdmin = identifier.toLowerCase() === 'admin';
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier },
+        ...(isShortAdmin ? [{ email: 'admin@katugastota.edu.lk' }] : []),
+      ],
+    });
+
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.',
+        message: 'Invalid email/contact number or password.',
       });
     }
 
@@ -110,7 +173,17 @@ export const login = async (req, res, next) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.',
+        message: 'Invalid email/contact number or password.',
+      });
+    }
+
+    // Check if account is inactive
+    if (user.status === 'inactive') {
+      return res.status(403).json({
+        success: false,
+        status: 'inactive',
+        message:
+          'ඔබගේ ගිණුම අක්‍රිය කර ඇත. කරුණාකර පරිපාලක අමතන්න (Your account has been deactivated. Please contact the administrator).',
       });
     }
 
@@ -122,10 +195,12 @@ export const login = async (req, res, next) => {
       data: {
         _id: user._id,
         name: user.name,
-        email: user.email,
+        email: user.email || '',
+        phone: user.phone,
         role: user.role,
         employeeId: user.employeeId,
         office: user.office,
+        status: user.status,
       },
       token,
     });

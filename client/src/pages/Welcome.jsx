@@ -15,13 +15,6 @@ export default function Welcome({
       <div className="welcome-glow-bottom"></div>
 
       <div className="welcome-card">
-        {/* Government Office Top Ribbon */}
-        <div className="gov-ribbon">
-          <span className="gov-dot"></span>
-          <span>GOVERNMENT OF SRI LANKA &bull; CENTRAL PROVINCE</span>
-          <span className="gov-dot"></span>
-        </div>
-
         {/* Official Education Zone Logo */}
         <div className="emblem-container animate-fade-in">
           <OfficeLogo size={120} rounded={false} />
@@ -44,7 +37,7 @@ export default function Welcome({
           </p>
         </div>
 
-        {/* Account Entry Options (Visible and ready after the 3-second popup) */}
+        {/* Account Entry Options (Visible and ready after the popup) */}
         <div className="welcome-actions animate-fade-in-up">
           {/* Login Button */}
           <button

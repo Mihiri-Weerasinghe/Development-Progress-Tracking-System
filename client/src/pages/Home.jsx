@@ -41,7 +41,7 @@ export default function Home({
         <h1 className="hero-title">Development Progress Tracking System</h1>
         <h2 className="hero-sinhala-title">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</h2>
         <p className="hero-description">
-          Zonal Education Office Katugastota &bull; Central Province &bull; Sri Lanka.
+          Zonal Education Office Katugastota &bull; Sri Lanka.
           Official platform for tracking zonal development initiatives, school progress, and educational projects.
         </p>
 

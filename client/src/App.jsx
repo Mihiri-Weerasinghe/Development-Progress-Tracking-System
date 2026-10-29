@@ -4,15 +4,18 @@ import Home from './pages/Home';
 import Welcome from './pages/Welcome';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import FundingDashboard from './pages/FundingDashboard';
+import AdminPanel from './pages/AdminPanel';
 import WelcomePopup from './components/WelcomePopup';
 import { useFetchItems } from './hooks/useFetchItems';
+import { useDataProtection } from './hooks/useDataProtection';
 import { checkServerHealth } from './services/api';
+import { ShieldAlert } from 'lucide-react';
 import './App.css';
 
 export default function App() {
-  // Navigation views: 'welcome' | 'register' | 'login' | 'home'
-  const [currentView, setCurrentView] = useState('welcome');
-  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const { securityNotice } = useDataProtection();
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('zeo_auth_user');
@@ -21,6 +24,11 @@ export default function App() {
       return null;
     }
   });
+
+  // Navigation views: 'welcome' | 'register' | 'login' | 'home' | 'dashboard'
+  const [currentView, setCurrentView] = useState('welcome');
+
+  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
 
   const { items, setItems, loading, error, refetch } = useFetchItems();
   const [dbStatus, setDbStatus] = useState('checking'); // 'connected' | 'disconnected' | 'checking'
@@ -44,14 +52,22 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Protect private views: only accessible after login
+  useEffect(() => {
+    if (!currentUser && (currentView === 'dashboard' || currentView === 'home' || currentView === 'admin')) {
+      setCurrentView('login');
+    }
+  }, [currentUser, currentView]);
+
   const handleRegisterSuccess = (user) => {
     setCurrentUser(user);
-    setCurrentView('home');
+    setCurrentView('dashboard');
   };
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    setCurrentView('home');
+    // Officers land directly on the Funding Overview Dashboard
+    setCurrentView('dashboard');
   };
 
   const handleLogout = () => {
@@ -64,19 +80,29 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* Confidential Data Protection Security Notice Toast */}
+      {securityNotice && (
+        <div className="confidential-toast-overlay" role="alert">
+          <ShieldAlert size={18} className="confidential-shield-icon" />
+          <span dangerouslySetInnerHTML={{ __html: securityNotice }} />
+        </div>
+      )}
+
       {/* 3-Second Welcome Popup on Initial Visit */}
       <WelcomePopup
         isOpen={showWelcomePopup}
         onClose={() => setShowWelcomePopup(false)}
       />
 
-      <Navbar
-        dbStatus={dbStatus}
-        currentUser={currentUser}
-        currentView={currentView}
-        onNavigate={setCurrentView}
-        onLogout={handleLogout}
-      />
+      {currentView !== 'dashboard' && (
+        <Navbar
+          dbStatus={dbStatus}
+          currentUser={currentUser}
+          currentView={currentView}
+          onNavigate={setCurrentView}
+          onLogout={handleLogout}
+        />
+      )}
 
       {currentView === 'welcome' && (
         <Welcome
@@ -103,6 +129,14 @@ export default function App() {
         />
       )}
 
+      {currentView === 'dashboard' && (
+        <FundingDashboard
+          currentUser={currentUser}
+          onNavigate={setCurrentView}
+          onLogout={handleLogout}
+        />
+      )}
+
       {currentView === 'home' && (
         <Home
           items={items}
@@ -115,16 +149,26 @@ export default function App() {
         />
       )}
 
-      <footer className="footer">
-        <div className="footer-content">
-          <p className="footer-main">
-            Development Progress Tracking System &bull; Zonal Education Office Katugastota
-          </p>
-          <p className="footer-sub">
-            Government of Sri Lanka &bull; Central Province &bull; All Rights Reserved
-          </p>
-        </div>
-      </footer>
+      {currentView === 'admin' && (
+        <AdminPanel
+          currentUser={currentUser}
+          onNavigate={setCurrentView}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {currentView !== 'dashboard' && (
+        <footer className="footer">
+          <div className="footer-content">
+            <p className="footer-main">
+              Development Progress Tracking System &bull; Zonal Education Office Katugastota
+            </p>
+            <p className="footer-sub">
+              All Rights Reserved
+            </p>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
