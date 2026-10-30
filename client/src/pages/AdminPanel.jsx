@@ -312,7 +312,7 @@ export default function AdminPanel({ currentUser, onNavigate, onLogout }) {
                     <tr key={user._id} className={isPending ? 'row-highlight-pending' : ''}>
                       <td>
                         <div className="user-primary-cell">
-                          <div className="user-avatar-badge">
+                          <div className="admin-table-avatar">
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>

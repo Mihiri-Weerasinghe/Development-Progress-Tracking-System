@@ -22,7 +22,8 @@
 }
 
 .navbar-container {
-  max-width: 1240px;
+  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -191,11 +192,13 @@
 .user-profile-bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
+.nav-user-badge,
 .user-avatar-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.85rem;
@@ -203,11 +206,14 @@
   border: 1px solid var(--border);
   border-radius: 9999px;
   font-size: 0.85rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .user-name {
   font-weight: 700;
   color: var(--text-main);
+  white-space: nowrap;
 }
 
 .user-role-chip {
@@ -217,6 +223,7 @@
   padding: 0.15rem 0.5rem;
   border-radius: 9999px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 /* ========================================================

@@ -25,10 +25,24 @@ export default function App() {
     }
   });
 
-  // Navigation views: 'welcome' | 'register' | 'login' | 'home' | 'dashboard'
-  const [currentView, setCurrentView] = useState('welcome');
+  // Navigation views: 'welcome' | 'register' | 'login' | 'home' | 'dashboard' | 'admin'
+  const [currentView, setCurrentView] = useState(() => {
+    try {
+      const stored = localStorage.getItem('zeo_auth_user');
+      return stored ? 'dashboard' : 'welcome';
+    } catch {
+      return 'welcome';
+    }
+  });
 
-  const [showWelcomePopup, setShowWelcomePopup] = useState(true);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(() => {
+    try {
+      const stored = localStorage.getItem('zeo_auth_user');
+      return !stored;
+    } catch {
+      return true;
+    }
+  });
 
   const { items, setItems, loading, error, refetch } = useFetchItems();
   const [dbStatus, setDbStatus] = useState('checking'); // 'connected' | 'disconnected' | 'checking'
@@ -58,6 +72,13 @@ export default function App() {
       setCurrentView('login');
     }
   }, [currentUser, currentView]);
+
+  // If user is already logged in, redirect them away from guest welcome/auth views to dashboard
+  useEffect(() => {
+    if (currentUser && (currentView === 'welcome' || currentView === 'login' || currentView === 'register')) {
+      setCurrentView('dashboard');
+    }
+  }, [currentUser]);
 
   const handleRegisterSuccess = (user) => {
     setCurrentUser(user);

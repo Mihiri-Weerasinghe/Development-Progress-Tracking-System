@@ -55,7 +55,7 @@ export default function Navbar({
           <div className="nav-actions">
             {currentUser ? (
               <div className="user-profile-bar">
-                <div className="user-avatar-badge">
+                <div className="nav-user-badge">
                   <User size={16} />
                   <span className="user-name">{currentUser.name}</span>
                   <span className="user-role-chip">{currentUser.role}</span>
