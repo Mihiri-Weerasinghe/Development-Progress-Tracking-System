@@ -168,8 +168,6 @@ export default function FundingDashboard({
   const [crudFormData, setCrudFormData] = useState({
     name: '',
     amount: '',
-    utilized: '',
-    description: '',
     color: '#16a34a',
   });
   const [crudLoading, setCrudLoading] = useState(false);
@@ -447,8 +445,6 @@ export default function FundingDashboard({
     setCrudFormData({
       name: '',
       amount: '',
-      utilized: '',
-      description: '',
       color: '#16a34a',
     });
     setCrudError('');
@@ -462,8 +458,6 @@ export default function FundingDashboard({
     setCrudFormData({
       name: fund.name || '',
       amount: fund.amount || '',
-      utilized: fund.utilized || '',
-      description: fund.description || '',
       color: fund.color || '#16a34a',
     });
     setCrudError('');
@@ -518,8 +512,8 @@ export default function FundingDashboard({
         name: crudFormData.name.trim(),
         code: crudFormData.name.trim().toUpperCase(),
         amount: Number(crudFormData.amount),
-        utilized: Number(crudFormData.utilized) || 0,
-        description: crudFormData.description.trim(),
+        utilized: editingFund ? (Number(editingFund.utilized) || 0) : 0,
+        description: editingFund?.description || '',
         color: crudFormData.color,
       };
 
@@ -1660,7 +1654,7 @@ export default function FundingDashboard({
                     />
                   </div>
 
-                  <div className="crud-form-group">
+                  <div className="crud-form-group col-span-2">
                     <label className="crud-label">Total Allocated Amount (LKR) *</label>
                     <input
                       type="number"
@@ -1671,33 +1665,6 @@ export default function FundingDashboard({
                       value={crudFormData.amount}
                       onChange={(e) =>
                         setCrudFormData({ ...crudFormData, amount: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="crud-form-group">
-                    <label className="crud-label">Utilized Amount (LKR)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 5000000"
-                      className="crud-input"
-                      value={crudFormData.utilized}
-                      onChange={(e) =>
-                        setCrudFormData({ ...crudFormData, utilized: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="crud-form-group col-span-2">
-                    <label className="crud-label">Programme Description / Objectives</label>
-                    <textarea
-                      rows="3"
-                      placeholder="Purpose, intended schools, structural or capacity improvement goals..."
-                      className="crud-textarea"
-                      value={crudFormData.description}
-                      onChange={(e) =>
-                        setCrudFormData({ ...crudFormData, description: e.target.value })
                       }
                     />
                   </div>
