@@ -62,19 +62,47 @@ const DEFAULT_FUNDING_SOURCES = [
     textColor: '#be123c',
     description: 'ද්විතීයික අධ්‍යාපන අංශ වැඩිදියුණු කිරීමේ වැඩසටහන.',
   },
-  {
-    code: 'OTHER',
-    name: 'Other',
-    fullName: 'Other',
-    amount: 4500000,
-    utilized: 2800000,
-    color: '#0d9488',
-    lightBg: '#f0fdfa',
-    borderColor: '#99f6e4',
-    textColor: '#0f766e',
-    description: 'පළාත් සභා හා අනෙකුත් දේශීය ප්‍රතිපාදන.',
-  },
+
 ];
+
+// Modern distinct palette for auto-assigning unique card theme colors
+const COLOR_PALETTE = [
+  '#0284c7', // Sky Blue
+  '#16a34a', // Emerald Green
+  '#8b5cf6', // Violet
+  '#ea580c', // Orange
+  '#f59e0b', // Amber
+  '#0d9488', // Teal
+  '#f43f5e', // Rose
+  '#4f46e5', // Indigo
+  '#06b6d4', // Cyan
+  '#d97706', // Warm Amber
+  '#7c3aed', // Deep Violet
+  '#059669', // Dark Emerald
+  '#e11d48', // Ruby Crimson
+  '#2563eb', // Royal Blue
+  '#65a30d', // Lime
+  '#db2777', // Fuchsia / Pink
+  '#0891b2', // Deep Cyan
+  '#475569', // Slate
+];
+
+const pickNextUnusedColor = (existingColors = []) => {
+  const used = new Set(existingColors.map((c) => (c || '').toLowerCase().trim()).filter(Boolean));
+  const unused = COLOR_PALETTE.find((hex) => !used.has(hex.toLowerCase()));
+  if (unused) return unused;
+
+  const counts = {};
+  COLOR_PALETTE.forEach((hex) => { counts[hex] = 0; });
+  existingColors.forEach((c) => {
+    const lower = (c || '').toLowerCase().trim();
+    if (counts[lower] !== undefined) counts[lower]++;
+  });
+
+  return COLOR_PALETTE.reduce((minHex, currHex) =>
+    counts[currHex] < counts[minHex] ? currHex : minHex
+  );
+};
 
 // Helper to determine styling based on hex color
 const computeColorStyles = (hexColor = '#0284c7') => {
@@ -100,6 +128,12 @@ export const getFundingSources = async (req, res, next) => {
     }
 
     let funds = await FundingSource.find({}).sort({ createdAt: 1 });
+
+    // Clean up legacy 'OTHER' fund since dynamic 'Add Funding Source' is used
+    if (funds.some((f) => f.code === 'OTHER' || f.name === 'Other')) {
+      await FundingSource.deleteMany({ $or: [{ code: 'OTHER' }, { name: 'Other' }] });
+      funds = funds.filter((f) => f.code !== 'OTHER' && f.name !== 'Other');
+    }
 
     // Auto-seed defaults if database has no funding sources yet
     if (funds.length === 0) {
@@ -132,7 +166,6 @@ export const getFundingSources = async (req, res, next) => {
       'GEMP': 3,
       'UNICEF': 4,
       'SESIP': 5,
-      'OTHER': 6,
     };
     const sortedFunds = [...funds].sort((a, b) => {
       const orderA = ORDER_MAP[a.code?.toUpperCase()] || 99;
@@ -205,7 +238,11 @@ export const createFundingSource = async (req, res, next) => {
       });
     }
 
-    const chosenColor = color || '#0284c7';
+    let chosenColor = color;
+    if (!chosenColor) {
+      const allFunds = await FundingSource.find({}).select('color');
+      chosenColor = pickNextUnusedColor(allFunds.map((f) => f.color));
+    }
     const styles = computeColorStyles(chosenColor);
 
     const newFund = await FundingSource.create({

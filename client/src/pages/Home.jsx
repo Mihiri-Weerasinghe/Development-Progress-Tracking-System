@@ -38,7 +38,7 @@ export default function Home({
         <div className="hero-emblem-badge">
           <OfficeLogo size={90} />
         </div>
-        <h1 className="hero-title">Development Progress Tracking System</h1>
+        <h1 className="hero-title">Education Development Progress Tracking System</h1>
         <h2 className="hero-sinhala-title">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</h2>
         <p className="hero-description">
           Zonal Education Office Katugastota &bull; Sri Lanka.

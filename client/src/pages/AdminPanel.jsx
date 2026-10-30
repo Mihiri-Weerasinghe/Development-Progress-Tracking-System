@@ -17,8 +17,11 @@ import {
   Phone,
   Briefcase,
   Layers,
+  FileText,
 } from 'lucide-react';
 import { getUsers, updateUserStatus, deleteUser } from '../services/api';
+import ReportPromptModal from '../components/ReportPromptModal';
+import { generateUsersReport } from '../utils/reportGenerator';
 import './AdminPanel.css';
 
 export default function AdminPanel({ currentUser, onNavigate, onLogout }) {
@@ -28,6 +31,7 @@ export default function AdminPanel({ currentUser, onNavigate, onLogout }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -124,6 +128,15 @@ export default function AdminPanel({ currentUser, onNavigate, onLogout }) {
       u.role?.toLowerCase().includes(q)
     );
   });
+
+  const handleGenerateUsersReport = (format) => {
+    generateUsersReport(format, {
+      users: filteredUsers,
+      filter,
+      currentUser,
+    });
+    showToast(`Officer Accounts Report (${format.toUpperCase()}) generated successfully!`);
+  };
 
   return (
     <main className="main-content admin-panel-container">
@@ -244,6 +257,24 @@ export default function AdminPanel({ currentUser, onNavigate, onLogout }) {
             >
               <RefreshCw size={16} className={loading ? 'spin-animation' : ''} />
               <span>Refresh</span>
+            </button>
+
+            {/* Generate Report Button */}
+            <button
+              type="button"
+              className="admin-refresh-btn admin-report-btn"
+              onClick={() => setShowReportPrompt(true)}
+              disabled={loading || filteredUsers.length === 0}
+              title="Generate Officer Directory Report (Excel or PDF)"
+              style={{
+                backgroundColor: '#f0fdf4',
+                borderColor: '#86efac',
+                color: '#15803d',
+                fontWeight: 600,
+              }}
+            >
+              <FileText size={16} />
+              <span>Generate Report</span>
             </button>
           </div>
         </div>
@@ -437,6 +468,17 @@ export default function AdminPanel({ currentUser, onNavigate, onLogout }) {
           )}
         </div>
       </section>
+
+      {/* Confirmation & Format Selection Modal for User Reports */}
+      <ReportPromptModal
+        isOpen={showReportPrompt}
+        onClose={() => setShowReportPrompt(false)}
+        reportTitle="Officer Accounts Directory Report"
+        reportSubtitle="Katugastota ZEO DPTS User Accounts & Roles"
+        reportDetails={`${filteredUsers.length} Officers • Filter: ${filter.toUpperCase()}`}
+        defaultFormat="excel"
+        onGenerate={handleGenerateUsersReport}
+      />
     </main>
   );
 }

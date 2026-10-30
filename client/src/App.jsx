@@ -182,7 +182,7 @@ export default function App() {
         <footer className="footer">
           <div className="footer-content">
             <p className="footer-main">
-              Development Progress Tracking System &bull; Zonal Education Office Katugastota
+              Education Development Progress Tracking System &bull; Zonal Education Office Katugastota
             </p>
             <p className="footer-sub">
               All Rights Reserved

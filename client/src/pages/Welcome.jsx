@@ -28,7 +28,7 @@ export default function Welcome({
 
           <div className="system-pill">
             <BarChart3 size={18} className="pill-icon" />
-            <span>Development Progress Tracking System</span>
+            <span>Education Development Progress Tracking System</span>
           </div>
 
           <p className="welcome-description">

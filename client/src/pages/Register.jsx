@@ -180,7 +180,7 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
             <h1 className="auth-title">Officer Registration</h1>
             <h2 className="auth-sinhala-subtitle">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</h2>
             <p className="auth-system-desc">
-              Development Progress Tracking System
+              Education Development Progress Tracking System
             </p>
           </div>
         </div>
@@ -463,7 +463,7 @@ export default function Register({ onNavigateToLogin, onNavigateToWelcome, onReg
             <div className="register-success-tip" style={{ borderColor: '#86efac', backgroundColor: '#f0fdf4' }}>
               <span className="tip-icon">✨</span>
               <div style={{ color: '#166534' }}>
-                ඔබගේ ගිණුම සාර්ථකව සක්‍රිය කර ඇත. දැන් ඔබට Development Progress Tracking System වෙත පිවිසිය හැක.
+                ඔබගේ ගිණුම සාර්ථකව සක්‍රිය කර ඇත. දැන් ඔබට Education Development Progress Tracking System වෙත පිවිසිය හැක.
               </div>
             </div>
 

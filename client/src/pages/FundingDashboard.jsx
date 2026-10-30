@@ -43,6 +43,11 @@ import {
   updateFundRecord,
   deleteFundRecord,
 } from '../services/api';
+import ReportPromptModal from '../components/ReportPromptModal';
+import {
+  generateOverviewReport,
+  generateDetailedSheetReport,
+} from '../utils/reportGenerator';
 import './FundingDashboard.css';
 
 // Default fallback funding sources
@@ -112,33 +117,56 @@ const FALLBACK_FUNDING_SOURCES = [
     textColor: '#be123c',
     description: 'ද්විතීයික අධ්‍යාපන අංශ වැඩිදියුණු කිරීමේ වැඩසටහන.',
   },
-  {
-    _id: 'other',
-    code: 'OTHER',
-    name: 'Other',
-    fullName: 'Other',
-    amount: 4500000,
-    utilized: 2800000,
-    color: '#0d9488',
-    lightBg: '#f0fdfa',
-    borderColor: '#99f6e4',
-    textColor: '#0f766e',
-    description: 'පළාත් සභා හා අනෙකුත් දේශීය ප්‍රතිපාදන.',
-  },
+
 ];
 
 // Progress sheet records start empty; official topics/columns are retained
 const OFFICIAL_CF_RECORDS = [];
 
-const PRESET_COLORS = [
-  { hex: '#0284c7', label: 'Sky Blue' },
-  { hex: '#16a34a', label: 'Katugastota Green' },
-  { hex: '#8b5cf6', label: 'Purple' },
-  { hex: '#f59e0b', label: 'Amber' },
-  { hex: '#f43f5e', label: 'Rose' },
-  { hex: '#0d9488', label: 'Teal' },
-  { hex: '#4f46e5', label: 'Indigo' },
+// Modern distinct palette for auto-assigning unique card theme colors
+const COLOR_PALETTE = [
+  '#0284c7', // Sky Blue
+  '#16a34a', // Emerald Green
+  '#8b5cf6', // Violet
+  '#ea580c', // Orange
+  '#f59e0b', // Amber
+  '#0d9488', // Teal
+  '#f43f5e', // Rose
+  '#4f46e5', // Indigo
+  '#06b6d4', // Cyan
+  '#d97706', // Warm Amber
+  '#7c3aed', // Deep Violet
+  '#059669', // Dark Emerald
+  '#e11d48', // Ruby Crimson
+  '#2563eb', // Royal Blue
+  '#65a30d', // Lime
+  '#db2777', // Fuchsia / Pink
+  '#0891b2', // Deep Cyan
+  '#475569', // Slate
 ];
+
+// Automatically select a color that hasn't been used yet by existing funding sources
+const getNextAvailableColor = (existingFunds = []) => {
+  const usedColors = new Set(
+    existingFunds
+      .map((f) => (f.color || '').toLowerCase().trim())
+      .filter(Boolean)
+  );
+
+  const unused = COLOR_PALETTE.find((hex) => !usedColors.has(hex.toLowerCase()));
+  if (unused) return unused;
+
+  const counts = {};
+  COLOR_PALETTE.forEach((hex) => { counts[hex] = 0; });
+  existingFunds.forEach((f) => {
+    const c = (f.color || '').toLowerCase().trim();
+    if (counts[c] !== undefined) counts[c]++;
+  });
+
+  return COLOR_PALETTE.reduce((minHex, currHex) =>
+    counts[currHex] < counts[minHex] ? currHex : minHex
+  );
+};
 
 export default function FundingDashboard({
   currentUser,
@@ -151,6 +179,16 @@ export default function FundingDashboard({
   const [showReportModal, setShowReportModal] = useState(false);
   const [exportNotice, setExportNotice] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Report Prompt Modal State (Confirmation -> Format Selection -> Generation)
+  const [reportPromptConfig, setReportPromptConfig] = useState({
+    isOpen: false,
+    type: null, // 'overview' | 'sheet'
+    title: '',
+    subtitle: '',
+    details: '',
+    defaultFormat: 'excel',
+  });
 
   // Live Backend Data
   const [rawFunds, setRawFunds] = useState([]);
@@ -168,7 +206,6 @@ export default function FundingDashboard({
   const [crudFormData, setCrudFormData] = useState({
     name: '',
     amount: '',
-    color: '#16a34a',
   });
   const [crudLoading, setCrudLoading] = useState(false);
   const [crudError, setCrudError] = useState('');
@@ -256,7 +293,6 @@ export default function FundingDashboard({
       'GEMP': 3,
       'UNICEF': 4,
       'SESIP': 5,
-      'OTHER': 6,
     };
 
     const sortedList = [...list].sort((a, b) => {
@@ -375,63 +411,65 @@ export default function FundingDashboard({
     };
   }, [fundRecords]);
 
-  // Action: Export Main Dashboard Data
-  const handleExportData = () => {
-    const headers =
-      'Funding Source,Total Allocation (LKR),Percentage (%),Utilized (LKR),Balance (LKR),Utilization Rate (%)\n';
-    const rows = fundingSources
-      .map(
-        (f) =>
-          `"${f.name}",${f.amount},${f.percentage},${f.utilized},${f.balance},${f.utilizationRate}`
-      )
-      .join('\n');
-    const totalRow = `\n"TOTAL",${totalAllocation},"100.0%",${totalUtilized},${totalBalance},"${overallRate}"`;
-
-    const blob = new Blob([headers + rows + totalRow], {
-      type: 'text/csv;charset=utf-8;',
+  // Trigger Confirmation & Format Prompt for Overview Report
+  const triggerOverviewReportPrompt = (defaultFmt = 'excel') => {
+    setReportPromptConfig({
+      isOpen: true,
+      type: 'overview',
+      title: 'Funding Overview Report',
+      subtitle: 'Consolidated table of funding allocations and balances',
+      details: `${fundingSources.length} Programmes • Total ${totalAllocationFormatted}`,
+      defaultFormat: defaultFmt,
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'Funding_Overview_Report_ZEO_Katugastota.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setExportNotice(true);
-    setTimeout(() => setExportNotice(false), 4000);
   };
 
-  // Action: Export Detailed Sheet Data (Matches Photo Columns)
-  const handleExportSheetData = () => {
+  // Trigger Confirmation & Format Prompt for Detailed Government Sheet
+  const triggerSheetReportPrompt = (defaultFmt = 'excel') => {
     const fundName = selectedFundDetail?.name || 'CF';
-    const title = `"${fundName} - ප්‍රතිපාදන (වියදම් කළ ප්‍රතිපාදන අනුව ප්‍රගතිය)"\n"කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය • සංවර්ධන අංශය"\n\n`;
-    const headers =
-      '#,විෂය / කාර්යය,DATE,Activity No,Budget Code,Source Of Funding,Allocation (Rs),Expenditure (Rs),%,Balance (Rs),වැඩසටහන් ගණන,ඉලක්කගත ගණන,සහභාගී වූ ගණන,සහභාගීත්වයේ ප්‍රතිශතය (%)\n';
-
-    const rows = filteredRecords
-      .map((r, idx) => {
-        const bal = Math.max(0, (r.allocation || 0) - (r.expenditure || 0));
-        const finP = r.allocation > 0 ? ((r.expenditure / r.allocation) * 100).toFixed(1) : '-';
-        const partP = r.targetCount > 0 ? Math.round((r.actualCount / r.targetCount) * 100) : '-';
-        return `${idx + 1},"${r.subject}","${r.date || ''}","${r.activityNo || ''}","${r.budgetCode || ''}","${r.sourceOfFunding || fundName}",${r.allocation || 0},${r.expenditure || 0},${finP},${bal},${r.programCount || 0},${r.targetCount || 0},${r.actualCount || 0},${partP}`;
-      })
-      .join('\n');
-
-    const totalRow = `\n,"Total / එකතුව",,,,,${sheetTotals.allocation},${sheetTotals.expenditure},${sheetTotals.overallFinPercent},${sheetTotals.balance},${sheetTotals.programCount},${sheetTotals.targetCount},${sheetTotals.actualCount},${sheetTotals.overallPartPercent}`;
-
-    const blob = new Blob([title + headers + rows + totalRow], {
-      type: 'text/csv;charset=utf-8;',
+    setReportPromptConfig({
+      isOpen: true,
+      type: 'sheet',
+      title: `${fundName} - Progress & Provisions Sheet`,
+      subtitle: '13-Column expenditure and participant progress data table',
+      details: `${filteredRecords.length} line records • Total ${sheetTotals.allocationFormatted}`,
+      defaultFormat: defaultFmt,
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${fundName}_Progress_Provisions_Sheet_Katugastota.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  };
 
-    showToast(`Progress Sheet exported as CSV successfully!`);
+  // Action: Export Main Dashboard Data (Opens format selection prompt)
+  const handleExportData = () => {
+    triggerOverviewReportPrompt('excel');
+  };
+
+  // Action: Export Detailed Sheet Data (Opens format selection prompt)
+  const handleExportSheetData = () => {
+    triggerSheetReportPrompt('excel');
+  };
+
+  // Execute report generation after confirmation & format selection
+  const handleExecuteReport = (format) => {
+    if (reportPromptConfig.type === 'overview') {
+      generateOverviewReport(format, {
+        fundingSources,
+        totalAllocation,
+        totalUtilized,
+        totalBalance,
+        overallRate,
+        currentUser,
+      });
+      showToast(`Funding Overview Report (${format.toUpperCase()}) successfully generated!`);
+      setExportNotice(true);
+      setTimeout(() => setExportNotice(false), 4000);
+    } else if (reportPromptConfig.type === 'sheet') {
+      const fundName = selectedFundDetail?.name || 'CF';
+      generateDetailedSheetReport(format, {
+        fundName,
+        records: filteredRecords,
+        sheetTotals,
+        currentUser,
+      });
+      showToast(`${fundName} Progress Sheet (${format.toUpperCase()}) successfully generated!`);
+    }
   };
 
   const handleOpenDetails = (funding = null) => {
@@ -445,7 +483,6 @@ export default function FundingDashboard({
     setCrudFormData({
       name: '',
       amount: '',
-      color: '#16a34a',
     });
     setCrudError('');
     setShowCrudModal(true);
@@ -458,7 +495,6 @@ export default function FundingDashboard({
     setCrudFormData({
       name: fund.name || '',
       amount: fund.amount || '',
-      color: fund.color || '#16a34a',
     });
     setCrudError('');
     setShowCrudModal(true);
@@ -508,13 +544,16 @@ export default function FundingDashboard({
     setCrudError('');
 
     try {
+      // Automatically pick an unused color for new funds; preserve existing color if editing
+      const assignedColor = editingFund?.color || getNextAvailableColor(rawFunds);
+
       const payload = {
         name: crudFormData.name.trim(),
         code: crudFormData.name.trim().toUpperCase(),
         amount: Number(crudFormData.amount),
         utilized: editingFund ? (Number(editingFund.utilized) || 0) : 0,
         description: editingFund?.description || '',
-        color: crudFormData.color,
+        color: assignedColor,
       };
 
       if (editingFund && editingFund._id) {
@@ -705,7 +744,7 @@ export default function FundingDashboard({
             <button
               type="button"
               className={`sidebar-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
-              onClick={() => setShowReportModal(true)}
+              onClick={() => triggerOverviewReportPrompt('pdf')}
             >
               <BarChart3 size={19} className="nav-item-icon" />
               <span>Reports</span>
@@ -949,47 +988,20 @@ export default function FundingDashboard({
                       <span>Export Excel</span>
                     </button>
 
-                    {/* Print */}
+                    {/* Print / PDF Report */}
                     <button
                       type="button"
                       className="btn-gov-action btn-gov-outline"
-                      onClick={() => window.print()}
-                      title="Print Official Sheet"
+                      onClick={() => triggerSheetReportPrompt('pdf')}
+                      title="Generate Report (PDF / Print)"
                     >
                       <Printer size={15} />
-                      <span>Print Sheet</span>
+                      <span>Print / PDF Report</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Banner when 'Other' fund is selected */}
-                {selectedFundDetail.name.toLowerCase() === 'other' && (
-                  <div
-                    className="other-fund-placeholder-banner animate-fade-in"
-                    style={{
-                      margin: '0.75rem 1.25rem 1.25rem',
-                      padding: '1rem 1.25rem',
-                      backgroundColor: '#f0fdfa',
-                      border: '1.5px dashed #14b8a6',
-                      borderRadius: '10px',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.85rem',
-                    }}
-                  >
-                    <div style={{ color: '#0d9488', marginTop: '2px' }}>
-                      <Layers size={22} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#0f766e', marginBottom: '0.25rem' }}>
-                        Other (අනෙකුත්) Funding Category Selected
-                      </div>
-                      <p style={{ margin: 0, fontSize: '0.875rem', color: '#134e4a', lineHeight: 1.5 }}>
-                        මෙම අංශය යටතේ ඇතුළත් විය යුතු අනු-කාණ්ඩ (sub-categories) සහ දත්ත ඉදිරියේදී ඔබගේ උපදෙස් අනුව එක් කිරීමට සූදානම් කර ඇත. (Sub-items and specific structures will be configured as you specify).
-                      </p>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* The Exact 13-Column Government Table */}
                 <div className="gov-table-wrapper">
@@ -1361,7 +1373,7 @@ export default function FundingDashboard({
                     <button
                       type="button"
                       className="quick-action-btn"
-                      onClick={() => setShowReportModal(true)}
+                      onClick={() => triggerOverviewReportPrompt('pdf')}
                     >
                       <div className="action-btn-left">
                         <div className="action-icon-box">
@@ -1376,7 +1388,7 @@ export default function FundingDashboard({
                     <button
                       type="button"
                       className="quick-action-btn"
-                      onClick={handleExportData}
+                      onClick={() => triggerOverviewReportPrompt('excel')}
                     >
                       <div className="action-btn-left">
                         <div className="action-icon-box">
@@ -1641,7 +1653,7 @@ export default function FundingDashboard({
 
                 <div className="crud-form-grid">
                   <div className="crud-form-group col-span-2">
-                    <label className="crud-label">Fund Name * (e.g. CF, CF Competition, GEMP, UNICEF, SESIP, Other)</label>
+                    <label className="crud-label">Fund Name * (e.g. CF, CF Competition, GEMP, UNICEF, SESIP)</label>
                     <input
                       type="text"
                       required
@@ -1669,20 +1681,7 @@ export default function FundingDashboard({
                     />
                   </div>
 
-                  <div className="crud-form-group col-span-2">
-                    <label className="crud-label">Card Theme Color</label>
-                    <div className="color-presets-row">
-                      {PRESET_COLORS.map((c) => (
-                        <div
-                          key={c.hex}
-                          className={`color-preset-pill ${crudFormData.color === c.hex ? 'active' : ''}`}
-                          style={{ backgroundColor: c.hex }}
-                          title={c.label}
-                          onClick={() => setCrudFormData({ ...crudFormData, color: c.hex })}
-                        />
-                      ))}
-                    </div>
-                  </div>
+
                 </div>
               </div>
 
@@ -1832,9 +1831,9 @@ export default function FundingDashboard({
               <div className="modal-title-block">
                 <FileText size={22} className="modal-title-icon" />
                 <div>
-                  <h3 className="modal-title">Official Funding Report Summary</h3>
+                  <h3 className="modal-title">Funding Table Report</h3>
                   <p className="modal-subtitle">
-                    Education Sector Development Framework and Programme
+                    Education Development Progress Tracking System
                   </p>
                 </div>
               </div>
@@ -1848,57 +1847,7 @@ export default function FundingDashboard({
             </div>
 
             <div className="modal-body report-printable">
-              {/* Report Letterhead */}
-              <div className="report-letterhead">
-                <OfficeLogo size={60} rounded={false} />
-                <div className="report-letterhead-text">
-                  <h4>ZONAL EDUCATION OFFICE - KATUGASTOTA</h4>
-                  <h5>කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</h5>
-                  <p>Development Progress Tracking System &bull; Financial Division</p>
-                </div>
-              </div>
-
-              <div className="report-meta-grid">
-                <div className="meta-box">
-                  <span className="meta-label">Report Document:</span>
-                  <strong className="meta-val">Overview of Funding Sources (Summary)</strong>
-                </div>
-                <div className="meta-box">
-                  <span className="meta-label">Generated Date:</span>
-                  <strong className="meta-val">
-                    {new Date().toLocaleDateString('en-GB')}
-                  </strong>
-                </div>
-                <div className="meta-box">
-                  <span className="meta-label">Prepared For:</span>
-                  <strong className="meta-val">Zonal Director & Development Section</strong>
-                </div>
-                <div className="meta-box">
-                  <span className="meta-label">Officer In Charge:</span>
-                  <strong className="meta-val">{currentUser?.name || 'Authorized Officer'}</strong>
-                </div>
-              </div>
-
-              {/* Summary Highlights */}
-              <div className="report-summary-boxes">
-                <div className="report-stat-box">
-                  <span className="stat-label">Total Allocated</span>
-                  <span className="stat-number">{totalAllocationFormatted}</span>
-                  <span className="stat-sub">Across {fundingSources.length} Active Programmes</span>
-                </div>
-                <div className="report-stat-box">
-                  <span className="stat-label">Total Disbursed</span>
-                  <span className="stat-number">{totalUtilizedFormatted}</span>
-                  <span className="stat-sub">Overall {overallRate} progress</span>
-                </div>
-                <div className="report-stat-box">
-                  <span className="stat-label">Unallocated / Reserve</span>
-                  <span className="stat-number">{totalBalanceFormatted}</span>
-                  <span className="stat-sub">Available for upcoming targets</span>
-                </div>
-              </div>
-
-              <h4 className="report-table-heading">Programme Allocation Breakdown</h4>
+              <h4 className="report-table-heading" style={{ marginTop: 0 }}>Programme Allocation Breakdown</h4>
               <table className="report-table">
                 <thead>
                   <tr>
@@ -1953,6 +1902,22 @@ export default function FundingDashboard({
           </div>
         </div>
       )}
+
+      {/* Confirmation & Format Selection Modal for Reports */}
+      <ReportPromptModal
+        isOpen={reportPromptConfig.isOpen}
+        onClose={() => setReportPromptConfig((prev) => ({ ...prev, isOpen: false }))}
+        reportTitle={reportPromptConfig.title}
+        reportSubtitle={reportPromptConfig.subtitle}
+        reportDetails={reportPromptConfig.details}
+        defaultFormat={reportPromptConfig.defaultFormat}
+        onGenerate={handleExecuteReport}
+        onPrintPreview={
+          reportPromptConfig.type === 'overview'
+            ? () => setShowReportModal(true)
+            : () => window.print()
+        }
+      />
     </div>
   );
 }

@@ -32,13 +32,13 @@ export default function WelcomePopup({ isOpen, onClose }) {
 
         {/* Exact Welcome Text Requested by User */}
         <h2 className="popup-welcome-heading">
-          <span className="popup-welcome-title">Welcome to Development Progress Tracking System</span>
+          <span className="popup-welcome-title">Welcome to Education Development Progress Tracking System</span>
           <span className="popup-welcome-office">Zonal Education Office - Katugastota</span>
         </h2>
 
         {/* Sinhala Sub-heading */}
         <p className="popup-sinhala-text">
-          කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලයීය සංවර්ධන ප්‍රගති අධීක්ෂණ පද්ධතිය වෙත සාදරයෙන් පිළිගනිමු
+          කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලයීය අධ්‍යාපන සංවර්ධන ප්‍රගති අධීක්ෂණ පද්ධතිය වෙත සාදරයෙන් පිළිගනිමු
         </p>
 
         {/* Footer actions without any loading line */}

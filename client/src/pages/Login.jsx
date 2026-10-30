@@ -109,7 +109,7 @@ export default function Login({ onNavigateToRegister, onNavigateToWelcome, onLog
             <h1 className="auth-title">Officer Login</h1>
             <h2 className="auth-sinhala-subtitle">කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලය</h2>
             <p className="auth-system-desc">
-              Development Progress Tracking System
+              Education Development Progress Tracking System
             </p>
           </div>
         </div>

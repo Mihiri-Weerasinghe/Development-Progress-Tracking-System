@@ -89,7 +89,7 @@ const buildRegistrationHtml = ({ name, role, phone, email, clientUrl }) => {
                 Official Notification &bull; නිල දැනුම්දීම
               </div>
               <h1 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.3;">
-                Development Progress Tracking System
+                Education Development Progress Tracking System
               </h1>
               <div style="margin: 0 0 6px 0; font-size: 15px; font-weight: 600; color: #bbf7d0;">
                 Zonal Education Office - Katugastota
@@ -108,7 +108,7 @@ const buildRegistrationHtml = ({ name, role, phone, email, clientUrl }) => {
               </h2>
 
               <p style="font-size: 14.5px; line-height: 1.65; color: #334155; margin: 0 0 16px 0;">
-                Welcome to the <strong>Development Progress Tracking System (DPTS)</strong>. Your official officer account has been registered successfully.
+                Welcome to the <strong>Education Development Progress Tracking System (DPTS)</strong>. Your official officer account has been registered successfully.
               </p>
 
               <div style="font-size: 13.5px; line-height: 1.6; color: #15803d; font-weight: 600; margin: 0 0 22px 0; padding: 12px 16px; background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 0 8px 8px 0;">
@@ -168,7 +168,7 @@ const buildRegistrationHtml = ({ name, role, phone, email, clientUrl }) => {
           <tr>
             <td style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 24px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6;">
               <div style="font-weight: 700; color: #1e293b; margin-bottom: 3px;">
-                Development Progress Tracking System &bull; Zonal Education Office - Katugastota
+                Education Development Progress Tracking System &bull; Zonal Education Office - Katugastota
               </div>
               <div>Official Educational Administration Portal &bull; All Rights Reserved</div>
               <div style="margin-top: 6px; color: #94a3b8; font-size: 11px;">
@@ -190,7 +190,7 @@ const buildRegistrationHtml = ({ name, role, phone, email, clientUrl }) => {
 const buildRegistrationText = ({ name, role, phone, email, clientUrl }) => {
   return `Dear ${name || 'Officer'},
 
-Welcome to the Development Progress Tracking System (DPTS).
+Welcome to the Education Development Progress Tracking System (DPTS).
 Your account has been registered successfully at Zonal Education Office - Katugastota.
 (කටුගස්තොට කලාප අධ්‍යාපන කාර්යාලයීය සංවර්ධන ප්‍රගති අධීක්ෂණ පද්ධතියෙහි ඔබගේ නිල ගිණුම සාර්ථකව ලියාපදිංචි කර ඇත.)
 
@@ -258,7 +258,7 @@ export const sendRegistrationConfirmationEmail = async ({ to, name, role, phone,
       process.env.EMAIL_FROM ||
       `"Zonal Education Office - Katugastota" <${senderEmail}>`,
     to: cleanTo,
-    subject: 'Registration Successful - Development Progress Tracking System (DPTS)',
+    subject: 'Registration Successful - Education Development Progress Tracking System (DPTS)',
     text: textContent,
     html: htmlContent,
   };

@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
+import { FileText } from 'lucide-react';
 import { createItem, deleteItem } from '../services/api';
 import { formatDate } from '../utils/helpers';
+import ReportPromptModal from './ReportPromptModal';
+import { generateItemsReport } from '../utils/reportGenerator';
 
 export default function ItemList({ items, setItems, loading, error, onRefresh }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
+
+  const handleGenerateItemsReport = (format) => {
+    generateItemsReport(format, {
+      items,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,9 +88,22 @@ export default function ItemList({ items, setItems, loading, error, onRefresh })
       <div className="card list-card">
         <div className="list-header">
           <h2>Documents in Database ({items.length})</h2>
-          <button onClick={onRefresh} className="btn btn-outline" disabled={loading}>
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {items.length > 0 && (
+              <button
+                onClick={() => setShowReportPrompt(true)}
+                className="btn btn-outline"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                title="Generate Documents Report"
+              >
+                <FileText size={15} />
+                <span>Generate Report</span>
+              </button>
+            )}
+            <button onClick={onRefresh} className="btn btn-outline" disabled={loading}>
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         {loading && <p className="status-text">Loading documents from MongoDB Cloud...</p>}
@@ -115,6 +138,17 @@ export default function ItemList({ items, setItems, loading, error, onRefresh })
           ))}
         </div>
       </div>
+
+      {/* Confirmation & Format Selection Modal for Database Items */}
+      <ReportPromptModal
+        isOpen={showReportPrompt}
+        onClose={() => setShowReportPrompt(false)}
+        reportTitle="MongoDB Database Documents Report"
+        reportSubtitle="Development initiatives & tracking records"
+        reportDetails={`${items.length} Documents`}
+        defaultFormat="excel"
+        onGenerate={handleGenerateItemsReport}
+      />
     </div>
   );
 }
